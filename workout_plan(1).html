@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="My Workouts">
+<title>My Workouts</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;}
+:root{
+  --bg:#0c1a2e;--card:#162035;--card2:#1c2a42;--border:#243050;
+  --blue:#2979ff;--gold:#ffb300;--red:#ef5350;--purple:#7c4dff;--green:#00c853;
+  --text:#e8edf5;--muted:#6b7fa3;
+  --safe-top:env(safe-area-inset-top,0px);--safe-bot:env(safe-area-inset-bottom,0px);
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;font-size:16px;}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden;}
+.screen.active{display:flex;}
+
+/* HOME */
+#home{background:var(--bg);}
+.home-header{padding:calc(var(--safe-top) + 28px) 20px 20px;background:linear-gradient(180deg,#0a1628 0%,var(--bg) 100%);}
+.home-eyebrow{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:6px;}
+.home-title{font-size:32px;font-weight:700;letter-spacing:-0.5px;line-height:1.1;}
+.home-sub{font-size:14px;color:var(--muted);margin-top:6px;}
+.phase-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px 20px 0;}
+.phase-btn{padding:14px 10px;border-radius:14px;border:2px solid var(--border);background:var(--card);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s;}
+.phase-btn.on{border-color:var(--blue);background:rgba(41,121,255,.12);color:#82b1ff;}
+.week-label{padding:20px 20px 10px;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);}
+.days-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;padding:0 20px;}
+.day-btn{display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 2px;border-radius:12px;border:1.5px solid transparent;background:var(--card);cursor:pointer;transition:all .15s;}
+.day-abbr{font-size:10px;font-weight:600;letter-spacing:.5px;color:var(--muted);}
+.day-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;background:rgba(255,255,255,.05);}
+.day-btn.t-hockey .day-icon{background:rgba(239,83,80,.18);}
+.day-btn.t-legs .day-icon{background:rgba(41,121,255,.2);}
+.day-btn.t-arms .day-icon{background:rgba(124,77,255,.2);}
+.day-btn.sel{border-color:var(--gold);background:rgba(255,179,0,.07);}
+.home-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 20px 100px;}
+
+/* SESSION */
+#session{background:var(--bg);}
+.sess-topbar{display:flex;align-items:center;gap:12px;padding:calc(var(--safe-top) + 14px) 16px 14px;background:var(--bg);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;}
+.back-btn{width:36px;height:36px;border-radius:10px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sess-title-wrap{flex:1;min-width:0;}
+.sess-day{font-size:18px;font-weight:700;letter-spacing:-.3px;}
+.sess-focus{font-size:12px;color:var(--muted);margin-top:1px;}
+.sess-badge{padding:5px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;flex-shrink:0;}
+.b-legs{background:rgba(41,121,255,.2);color:#82b1ff;}
+.b-hockey{background:rgba(239,83,80,.18);color:#ef9a9a;}
+.b-arms{background:rgba(124,77,255,.2);color:#b39ddb;}
+.b-rest{background:rgba(255,255,255,.07);color:var(--muted);}
+.sess-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px calc(var(--safe-bot) + 20px);}
+.prog-bar-wrap{background:var(--card);border-radius:14px;padding:14px 16px;margin-bottom:14px;border:1px solid var(--border);}
+.prog-row{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:8px;}
+.prog-track{height:6px;background:var(--border);border-radius:6px;overflow:hidden;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--gold));border-radius:6px;transition:width .4s ease;width:0%;}
+.sect-label{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin:18px 0 10px;font-weight:600;}
+.sect-label:first-child{margin-top:0;}
+.ex-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start;position:relative;transition:opacity .2s;}
+.ex-card.done{opacity:.4;}
+.ex-card.done .ex-bar{background:var(--green);}
+.ex-bar{position:absolute;left:0;top:12px;bottom:12px;width:3px;background:var(--blue);border-radius:0 3px 3px 0;}
+.ex-body{flex:1;min-width:0;padding-left:4px;}
+.ex-name{font-size:15px;font-weight:600;line-height:1.3;margin-bottom:4px;}
+.ex-sets{font-size:13px;font-weight:700;color:var(--gold);margin-bottom:4px;}
+.ex-note{font-size:12px;color:var(--muted);line-height:1.5;}
+.ex-check{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);background:transparent;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:transparent;transition:all .15s;margin-top:2px;}
+.ex-check.on{background:var(--green);border-color:var(--green);color:#fff;}
+.ex-body{padding-right:8px;}
+.info-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px 20px;text-align:center;margin-top:8px;}
+.info-card .big-icon{font-size:52px;margin-bottom:14px;}
+.info-card h2{font-size:22px;font-weight:700;margin-bottom:10px;}
+.info-card p{font-size:14px;color:var(--muted);line-height:1.65;}
+.tip-box{background:rgba(255,179,0,.07);border:1px solid rgba(255,179,0,.2);border-left:3px solid var(--gold);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:rgba(255,224,130,.9);line-height:1.6;}
+
+/* TIPS */
+#tips{background:var(--bg);}
+.tips-header{padding:calc(var(--safe-top)+24px) 20px 16px;border-bottom:1px solid var(--border);}
+.tips-header h1{font-size:26px;font-weight:700;margin-bottom:4px;}
+.tips-header p{font-size:13px;color:var(--muted);}
+.tips-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px calc(var(--safe-bot)+80px);}
+.tip-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:10px;}
+.tip-card h3{font-size:15px;font-weight:700;margin-bottom:6px;}
+.tip-card p{font-size:13px;color:var(--muted);line-height:1.6;}
+
+/* PROGRESSION */
+#progscreen{background:var(--bg);}
+.prog-header{padding:calc(var(--safe-top)+24px) 20px 16px;border-bottom:1px solid var(--border);}
+.prog-header h1{font-size:26px;font-weight:700;margin-bottom:4px;}
+.prog-header p{font-size:13px;color:var(--muted);}
+.prog-scroll2{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px calc(var(--safe-bot)+80px);}
+.prog-sect-title{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin:18px 0 10px;font-weight:600;}
+.prog-sect-title:first-child{margin-top:0;}
+.prog-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+.prog-item-l h4{font-size:14px;font-weight:700;margin-bottom:3px;}
+.prog-item-l p{font-size:12px;color:var(--muted);}
+.prog-item-r{font-size:12px;color:var(--muted);text-align:right;max-width:140px;line-height:1.5;flex-shrink:0;}
+
+/* BOTTOM NAV */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:rgba(12,26,46,.96);border-top:1px solid var(--border);padding:8px 0 calc(var(--safe-bot) + 6px);z-index:100;-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;cursor:pointer;color:var(--muted);font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;border:none;background:none;transition:color .15s;}
+.nav-item .ni{font-size:22px;line-height:1;}
+.nav-item.on{color:var(--blue);}
+</style>
+</head>
+<body>
+
+<div class="screen active" id="home">
+  <div class="home-header">
+    <div class="home-eyebrow">Your Plan</div>
+    <div class="home-title">Explosive Legs</div>
+    <div class="home-sub">Tap a day to open your session</div>
+  </div>
+  <div class="phase-row">
+    <button class="phase-btn on" id="p1btn" onclick="setPhase(1)">Phase 1<br><span style="font-weight:400;font-size:11px">Hockey Season</span></button>
+    <button class="phase-btn" id="p2btn" onclick="setPhase(2)">Phase 2<br><span style="font-weight:400;font-size:11px">Off-Season</span></button>
+  </div>
+  <div class="week-label">Select a Day</div>
+  <div class="days-grid" id="daysGrid"></div>
+  <div class="home-scroll" id="homeScroll"></div>
+</div>
+
+<div class="screen" id="session">
+  <div class="sess-topbar">
+    <button class="back-btn" onclick="goHome()">&#8592;</button>
+    <div class="sess-title-wrap">
+      <div class="sess-day" id="sessDay"></div>
+      <div class="sess-focus" id="sessFocus"></div>
+    </div>
+    <div class="sess-badge" id="sessBadge"></div>
+  </div>
+  <div class="sess-scroll" id="sessScroll"></div>
+</div>
+
+<div class="screen" id="tips">
+  <div class="tips-header"><h1>Training Tips</h1><p>For explosive training at 40</p></div>
+  <div class="tips-scroll">
+    <div class="tip-card"><h3>Quality over quantity</h3><p>Explosive reps require full recovery between sets. Don't rush rest periods — power output per rep matters more than volume.</p></div>
+    <div class="tip-card"><h3>Sleep is the main recovery tool</h3><p>Aim for 7-9 hours on training nights. At 40, adaptation happens during sleep more than any other time.</p></div>
+    <div class="tip-card"><h3>Protein intake</h3><p>Target 1.6-2.0g of protein per kg of bodyweight daily. Muscles need the raw material to rebuild after explosive work.</p></div>
+    <div class="tip-card"><h3>Listen to your joints</h3><p>Muscle soreness is normal. Joint discomfort means rest. Tendons take longer to adapt than muscles at any age.</p></div>
+    <div class="tip-card"><h3>Progress by quality, not just load</h3><p>Every 2-3 weeks aim to increase box height or jump distance rather than adding more reps.</p></div>
+    <div class="tip-card"><h3>Neuromuscular adaptation is fast</h3><p>You may feel stronger within 2-3 weeks even before visible muscle change — that's the nervous system learning to fire harder.</p></div>
+    <div class="tip-card"><h3>Hockey day rule</h3><p>Never do legs the day before hockey. Your training is always scheduled to protect your on-ice performance.</p></div>
+  </div>
+</div>
+
+<div class="screen" id="progscreen">
+  <div class="prog-header"><h1>Progression</h1><p>Off-season development plan</p></div>
+  <div class="prog-scroll2">
+    <div class="prog-sect-title">Off-Season Leg Progression</div>
+    <div class="prog-item"><div class="prog-item-l"><h4>Weeks 1-2</h4><p>Build the habit</p></div><div class="prog-item-r">Perfect form before adding load or height</div></div>
+    <div class="prog-item"><div class="prog-item-l"><h4>Weeks 3-4</h4><p>First progression</p></div><div class="prog-item-r">Increase box jump height 2-3 inches or broad jump distance</div></div>
+    <div class="prog-item"><div class="prog-item-l"><h4>Weeks 5-6</h4><p>Volume increase</p></div><div class="prog-item-r">Add 1 extra set to primary compound movements</div></div>
+    <div class="prog-item"><div class="prog-item-l"><h4>Weeks 7-8</h4><p>Intensity increase</p></div><div class="prog-item-r">Add weighted vest for squats or dumbbell for split squats</div></div>
+    <div class="prog-item"><div class="prog-item-l"><h4>Week 9+</h4><p>Maintain and vary</p></div><div class="prog-item-r">Swap 1 exercise per session every 4 weeks</div></div>
+    <div class="prog-sect-title">Phase Transition</div>
+    <div class="prog-item"><div class="prog-item-l"><h4>Off-season week 1</h4><p>Easy entry</p></div><div class="prog-item-r">Mon + Fri legs only. Skip Wednesday.</div></div>
+    <div class="prog-item"><div class="prog-item-l"><h4>Off-season week 2</h4><p>Full schedule</p></div><div class="prog-item-r">Add Wednesday once recovery is confirmed</div></div>
+  </div>
+</div>
+
+<div class="bottom-nav">
+  <button class="nav-item on" id="navHome" onclick="switchTab('home')"><span class="ni">&#x1F4C5;</span>Schedule</button>
+  <button class="nav-item" id="navTips" onclick="switchTab('tips')"><span class="ni">&#x1F4A1;</span>Tips</button>
+  <button class="nav-item" id="navProg" onclick="switchTab('progscreen')"><span class="ni">&#x1F4C8;</span>Progress</button>
+</div>
+
+<script>
+var phase=1,selDay=null,checks={};
+var WARMUP=[
+  {n:"Jump rope / high knees",s:"2 min",d:"Continuous — get heart rate up"},
+  {n:"Leg swings forward",s:"10 each leg",d:"Hold a wall for balance"},
+  {n:"Leg swings lateral",s:"10 each leg",d:"Open the hips fully"},
+  {n:"Bodyweight squats",s:"15 reps",d:"Full depth, controlled tempo"},
+  {n:"Hip circles",s:"10 each direction",d:"Both directions per side"}
+];
+var COOL=[
+  {n:"Hip flexor stretch",s:"45s each side",d:"Lunge position, upright torso"},
+  {n:"Quad stretch",s:"30s each side",d:"Standing or lying"},
+  {n:"Hamstring stretch",s:"45s each side",d:"Seated or standing"},
+  {n:"Pigeon pose / figure-4",s:"60s each side",d:"Key for hip recovery"}
+];
+var P1=[
+  {id:"p1mon",label:"Mon",full:"Monday",type:"hockey"},
+  {id:"p1tue",label:"Tue",full:"Tuesday",type:"arms"},
+  {id:"p1wed",label:"Wed",full:"Wednesday",type:"hockey"},
+  {id:"p1thu",label:"Thu",full:"Thursday",type:"arms"},
+  {id:"p1fri",label:"Fri",full:"Friday",type:"rest"},
+  {id:"p1sat",label:"Sat",full:"Saturday",type:"legs",focus:"Full Circuit",
+   ex:[
+    {n:"Jump Squats",s:"4 sets x 10 reps",d:"Explode up fast, land soft. Rest 60s between sets."},
+    {n:"Lateral Bounds (Skater Jumps)",s:"4 sets x 8 each side",d:"Mimic hockey push-off. Stick landing 1 second before switching."},
+    {n:"Bulgarian Split Squats",s:"3 sets x 10 each leg",d:"Rear foot on chair. Controlled down, explosive up."},
+    {n:"Box Jumps / Stair Jumps",s:"3 sets x 8 reps",d:"12-18 inch surface. Full reset between jumps."},
+    {n:"Broad Jumps",s:"3 sets x 6 reps",d:"Max horizontal distance each jump. Walk back and reset fully."},
+    {n:"Single-Leg Calf Raises",s:"3 sets x 15 each leg",d:"Slow up, pause at top, slow down. Key for skating push-off."}
+  ]},
+  {id:"p1sun",label:"Sun",full:"Sunday",type:"rest"}
+];
+var P2=[
+  {id:"p2mon",label:"Mon",full:"Monday",type:"legs",focus:"Power Focus",
+   tip:"Week 1 tip: in your first off-season week, skip Monday and do Friday only. Add Monday back in week 2 once recovery is confirmed.",
+   ex:[
+    {n:"Jump Squats",s:"4 sets x 10 reps",d:"Explode as fast as possible on the way up. Land softly."},
+    {n:"Box Jumps",s:"4 sets x 8 reps",d:"Full reset between jumps. Step down, don't jump down."},
+    {n:"Broad Jumps",s:"4 sets x 6 reps",d:"Maximum horizontal distance. Reset fully between jumps."},
+    {n:"Depth Drops",s:"3 sets x 8 reps",d:"Step off a low box and absorb the landing softly. Teaches deceleration."},
+    {n:"Single-Leg Calf Raises",s:"3 sets x 15 each leg",d:"Slow and controlled. Pause at top."}
+  ]},
+  {id:"p2tue",label:"Tue",full:"Tuesday",type:"arms"},
+  {id:"p2wed",label:"Wed",full:"Wednesday",type:"legs",focus:"Lateral & Skating",
+   ex:[
+    {n:"Skater Jumps (Lateral Bounds)",s:"4 sets x 10 each side",d:"Push hard off one leg, stick landing 1 second before switching."},
+    {n:"Lateral Box Step-Ups",s:"3 sets x 10 each leg",d:"Step up sideways onto a chair or step. Drive through the heel."},
+    {n:"Side-to-Side Squat Shuffles",s:"3 sets x 20 seconds",d:"Low squat position. Shuffle 3 steps each direction. Stay low."},
+    {n:"Lateral Lunge with Pause",s:"3 sets x 8 each side",d:"Pause 2 seconds at the bottom. Explosive push back to standing."},
+    {n:"Ankle Hops lateral",s:"3 sets x 15 reps",d:"Small, quick lateral hops. Minimal ground contact time."}
+  ]},
+  {id:"p2thu",label:"Thu",full:"Thursday",type:"arms"},
+  {id:"p2fri",label:"Fri",full:"Friday",type:"legs",focus:"Strength-Based",
+   ex:[
+    {n:"Bulgarian Split Squats",s:"4 sets x 10 each leg",d:"Rear foot elevated. Control the descent, explode upward."},
+    {n:"Single-Leg Romanian Deadlift",s:"3 sets x 8 each leg",d:"Hinge at hip, slight knee bend. Builds posterior chain for skating."},
+    {n:"Squat Jumps with Pause",s:"3 sets x 8 reps",d:"Squat down, hold 2 seconds, then explode up."},
+    {n:"Reverse Lunges explosive",s:"3 sets x 10 each leg",d:"Step back into lunge, drive front foot hard to return to standing."},
+    {n:"Wall Sit Isometric Hold",s:"3 sets x 30-45 seconds",d:"Builds quad endurance for hockey stance. Rest 60s between sets."},
+    {n:"Single-Leg Calf Raises",s:"3 sets x 15 each leg",d:"Slow and controlled. Essential for push-off power."}
+  ]},
+  {id:"p2sat",label:"Sat",full:"Saturday",type:"arms"},
+  {id:"p2sun",label:"Sun",full:"Sunday",type:"rest"}
+];
+
+var icons={hockey:"&#x1F3D2;",legs:"&#x26A1;",arms:"&#x1F4AA;",rest:"&#x1F634;"};
+
+function days(){return phase===1?P1:P2;}
+
+function setPhase(p){
+  phase=p;selDay=null;
+  document.getElementById("p1btn").className="phase-btn"+(p===1?" on":"");
+  document.getElementById("p2btn").className="phase-btn"+(p===2?" on":"");
+  renderGrid();
+  document.getElementById("homeScroll").innerHTML="";
+}
+
+function renderGrid(){
+  var g=document.getElementById("daysGrid");
+  var html="";
+  var dd=days();
+  for(var i=0;i<dd.length;i++){
+    var d=dd[i];
+    html+='<button class="day-btn t-'+d.type+(selDay===i?" sel":"")+'" onclick="selectDay('+i+')">'
+      +'<span class="day-abbr">'+d.label+'</span>'
+      +'<span class="day-icon">'+icons[d.type]+'</span>'
+      +'</button>';
+  }
+  g.innerHTML=html;
+}
+
+function selectDay(i){
+  selDay=i;
+  renderGrid();
+  var d=days()[i];
+  openSession(d);
+}
+
+function typeLabel(t){
+  if(t==="hockey")return"Hockey";
+  if(t==="legs")return"Legs";
+  if(t==="arms")return"Arms & Shoulders";
+  return"Rest Day";
+}
+
+function openSession(d){
+  document.getElementById("sessDay").textContent=d.full;
+  document.getElementById("sessFocus").textContent=d.focus||typeLabel(d.type);
+  var badge=document.getElementById("sessBadge");
+  badge.textContent=typeLabel(d.type);
+  badge.className="sess-badge b-"+d.type;
+  document.getElementById("sessScroll").innerHTML=buildSessHTML(d);
+  showScreen("session");
+  document.getElementById("sessScroll").scrollTop=0;
+}
+
+function buildSessHTML(d){
+  if(d.type==="rest"){
+    return'<div class="info-card"><div class="big-icon">&#x1F6CC;</div><h2>Rest Day</h2><p>Recovery is where adaptation happens. Stay hydrated, eat well, and let your body rebuild. Light walking is fine.</p></div>';
+  }
+  if(d.type==="hockey"){
+    return'<div class="info-card"><div class="big-icon">&#x1F3D2;</div><h2>Game Night</h2><p>No strength work today. Your training schedule is built around protecting your performance on the ice. Warm up well and give it everything.</p></div>';
+  }
+  if(d.type==="arms"){
+    return'<div class="info-card"><div class="big-icon">&#x1F4AA;</div><h2>Arms & Shoulders</h2><p>Your existing routine. This day sits between leg sessions to give your lower body full recovery time.<br><br>If legs feel heavy, add 5-10 min light cardio at the start to flush out soreness.</p></div>';
+  }
+  var k=d.id;
+  if(!checks[k])checks[k]={};
+  var total=d.ex.length;
+  var done=countDone(k);
+  var pct=total?Math.round(done/total*100):0;
+  var html="";
+  if(d.tip){html+='<div class="tip-box">'+d.tip+'</div>';}
+  html+='<div class="prog-bar-wrap">'
+    +'<div class="prog-row"><span>Session progress</span><span id="plabel">'+done+' / '+total+' done</span></div>'
+    +'<div class="prog-track"><div class="prog-fill" id="pfill" style="width:'+pct+'%"></div></div>'
+    +'</div>';
+  html+='<div class="sect-label">Warm-Up — 5 to 7 min</div>';
+  for(var i=0;i<WARMUP.length;i++){
+    var e=WARMUP[i];
+    html+='<div class="ex-card"><div class="ex-bar"></div><div class="ex-body"><div class="ex-name">'+e.n+'</div><div class="ex-sets">'+e.s+'</div><div class="ex-note">'+e.d+'</div></div></div>';
+  }
+  html+='<div class="sect-label">Main Workout</div>';
+  for(var j=0;j<d.ex.length;j++){
+    var ex=d.ex[j];
+    var on=checks[k][j]?" done":"";
+    var chk=checks[k][j]?" on":"";
+    html+='<div class="ex-card'+on+'" id="ec'+j+'">'
+      +'<div class="ex-bar"></div>'
+      +'<div class="ex-body"><div class="ex-name">'+ex.n+'</div><div class="ex-sets">'+ex.s+'</div><div class="ex-note">'+ex.d+'</div></div>'
+      +'<button class="ex-check'+chk+'" id="cb'+j+'" onclick="tick(\''+k+'\','+j+','+total+')" aria-label="Mark done">'+(checks[k][j]?'&#x2713;':'')+'</button>'
+      +'</div>';
+  }
+  html+='<div class="sect-label">Cool-Down — 5 min</div>';
+  for(var l=0;l<COOL.length;l++){
+    var ce=COOL[l];
+    html+='<div class="ex-card"><div class="ex-bar"></div><div class="ex-body"><div class="ex-name">'+ce.n+'</div><div class="ex-sets">'+ce.s+'</div><div class="ex-note">'+ce.d+'</div></div></div>';
+  }
+  return html;
+}
+
+function countDone(k){
+  var n=0;
+  for(var x in checks[k]){if(checks[k][x])n++;}
+  return n;
+}
+
+function tick(k,i,total){
+  checks[k][i]=!checks[k][i];
+  var card=document.getElementById("ec"+i);
+  var cb=document.getElementById("cb"+i);
+  if(checks[k][i]){card.classList.add("done");cb.classList.add("on");cb.innerHTML='&#x2713;';}
+  else{card.classList.remove("done");cb.classList.remove("on");cb.innerHTML='';}
+  var done=countDone(k);
+  var pct=Math.round(done/total*100);
+  document.getElementById("plabel").textContent=done+" / "+total+" done";
+  document.getElementById("pfill").style.width=pct+"%";
+}
+
+function goHome(){showScreen("home");}
+
+function showScreen(id){
+  var screens=document.querySelectorAll(".screen");
+  for(var i=0;i<screens.length;i++)screens[i].classList.remove("active");
+  document.getElementById(id).classList.add("active");
+}
+
+function switchTab(id){
+  showScreen(id);
+  var navs=["navHome","navTips","navProg"];
+  for(var i=0;i<navs.length;i++)document.getElementById(navs[i]).classList.remove("on");
+  var map={home:"navHome",tips:"navTips",progscreen:"navProg"};
+  if(map[id])document.getElementById(map[id]).classList.add("on");
+  if(id==="home"){selDay=null;renderGrid();}
+}
+
+renderGrid();
+</script>
+</body>
+</html>
